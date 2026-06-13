@@ -170,8 +170,8 @@ spec:
 │  Docker Image (nginx:alpine)                     │
 │                                                  │
 │  /download-metadata.json ← JSON index            │
-│  /assets/*.tar.gz      ← Python tarballs         │
-│  /health               ← Health check endpoint   │
+│  /assets/*.tar.gz        ← Python tarballs       │
+│  /health                 ← Health check endpoint │
 │                                                  │
 │  entrypoint.sh: replaces {{BASE_URL}} at startup │
 └──────────────────────────────────────────────────┘

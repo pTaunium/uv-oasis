@@ -208,6 +208,9 @@ uv run python build.py --dry-run
 # Build (download tarballs + generate JSON)
 uv run python build.py --output ./dist
 
+# Build using a specific upstream metadata URL (optional)
+# uv run python build.py --output ./dist --metadata-url "https://raw.githubusercontent.com/astral-sh/uv/some-branch/crates/uv-python/download-metadata.json"
+
 # Build Docker image
 docker build -f docker/Dockerfile -t uv-oasis:latest .
 ```

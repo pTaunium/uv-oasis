@@ -27,7 +27,7 @@ Downloads selected [python-build-standalone](https://github.com/astral-sh/python
 docker run -d -p 8080:8080 \
   -e BASE_URL=http://localhost:8080 \
   --name uv-oasis \
-  ghcr.io/pTaunium/uv-oasis:latest
+  ghcr.io/ptaunium/uv-oasis:latest
 ```
 
 ### Configure uv
@@ -41,8 +41,8 @@ uv python install 3.13
 
 ```bash
 # 1. On a machine with internet access:
-docker pull ghcr.io/pTaunium/uv-oasis:latest
-docker save ghcr.io/pTaunium/uv-oasis:latest -o uv-oasis.tar
+docker pull ghcr.io/ptaunium/uv-oasis:latest
+docker save ghcr.io/ptaunium/uv-oasis:latest -o uv-oasis.tar
 
 # 2. Transfer uv-oasis.tar to the air-gapped environment
 
@@ -51,7 +51,7 @@ docker load -i uv-oasis.tar
 docker run -d -p 8080:8080 \
   -e BASE_URL=http://python-mirror.internal:8080 \
   --name uv-oasis \
-  ghcr.io/pTaunium/uv-oasis:latest
+  ghcr.io/ptaunium/uv-oasis:latest
 
 # 4. Configure uv on developer machines:
 export UV_PYTHON_DOWNLOADS_JSON_URL=http://python-mirror.internal:8080/download-metadata.json
@@ -63,7 +63,7 @@ uv python install 3.13
 ```yaml
 services:
   uv-oasis:
-    image: ghcr.io/pTaunium/uv-oasis:latest
+    image: ghcr.io/ptaunium/uv-oasis:latest
     ports:
       - "8080:8080"
     environment:
@@ -102,7 +102,7 @@ spec:
     spec:
       containers:
         - name: uv-oasis
-          image: ghcr.io/<your-username>/uv-oasis:latest
+          image: ghcr.io/ptaunium/uv-oasis:latest
           ports:
             - containerPort: 8080
           env:

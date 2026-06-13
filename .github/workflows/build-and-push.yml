@@ -29,6 +29,9 @@ jobs:
           INPUT_TAG: ${{ inputs.release_tag }}
           IMAGE: ${{ github.repository }}
         run: |
+          # Convert image name to lowercase for Docker
+          IMAGE_LC=$(echo "${IMAGE}" | tr '[:upper:]' '[:lower:]')
+
           # Use manual input tag if provided, otherwise fetch latest
           if [ -n "${INPUT_TAG}" ]; then
             RELEASE_TAG="${INPUT_TAG}"
@@ -41,8 +44,8 @@ jobs:
           echo "Latest release tag: ${RELEASE_TAG}"
 
           # Check if this tag already exists in GHCR
-          if docker manifest inspect "ghcr.io/${IMAGE}:${RELEASE_TAG}" > /dev/null 2>&1; then
-            echo "Image ghcr.io/${IMAGE}:${RELEASE_TAG} already exists."
+          if docker manifest inspect "ghcr.io/${IMAGE_LC}:${RELEASE_TAG}" > /dev/null 2>&1; then
+            echo "Image ghcr.io/${IMAGE_LC}:${RELEASE_TAG} already exists."
             if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
               echo "Manual trigger — forcing rebuild."
               echo "should_build=true" >> "$GITHUB_OUTPUT"
@@ -75,6 +78,9 @@ jobs:
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
 
+      - name: Convert repository name to lowercase
+        run: echo "IMAGE_NAME=$(echo ${{ github.repository }} | tr '[:upper:]' '[:lower:]')" >> $GITHUB_ENV
+
       - name: Build and push image
         uses: docker/build-push-action@v6
         with:
@@ -82,7 +88,7 @@ jobs:
           file: docker/Dockerfile
           push: true
           tags: |
-            ${{ env.REGISTRY }}/${{ github.repository }}:${{ needs.check-update.outputs.release_tag }}
-            ${{ env.REGISTRY }}/${{ github.repository }}:latest
+            ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ needs.check-update.outputs.release_tag }}
+            ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest
           cache-from: type=gha
           cache-to: type=gha,mode=max

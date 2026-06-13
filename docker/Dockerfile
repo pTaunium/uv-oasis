@@ -2,7 +2,7 @@
 # Stage 1: Builder
 # - Install deps, run build.py to download Python tarballs + generate JSON
 # ============================================================
-FROM ghcr.io/astral-sh/uv:python3.14-alpine AS builder
+FROM --platform=$BUILDPLATFORM ghcr.io/astral-sh/uv:python3.14-alpine AS builder
 
 # uv best practices
 ENV UV_COMPILE_BYTECODE=1

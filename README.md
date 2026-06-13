@@ -8,18 +8,16 @@ Downloads selected [python-build-standalone](https://github.com/astral-sh/python
 
 ## Supported Python Versions
 
-| Minor | Platforms                                | Variants             |
-| ----- | ---------------------------------------- | -------------------- |
-| 3.14  | linux-x86_64 (gnu, musl), windows-x86_64 | normal, freethreaded |
-| 3.13  | linux-x86_64 (gnu, musl), windows-x86_64 | normal, freethreaded |
-| 3.12  | linux-x86_64 (gnu, musl), windows-x86_64 | normal               |
-| 3.11  | linux-x86_64 (gnu, musl), windows-x86_64 | normal               |
-| 3.10  | linux-x86_64 (gnu, musl), windows-x86_64 | normal               |
-| 3.9   | linux-x86_64 (gnu, musl), windows-x86_64 | normal               |
-| 3.8   | linux-x86_64 (gnu), windows-x86_64       | normal               |
+The mirror dynamically tracks the **latest stable patch** for **all active CPython minor versions** provided by upstream [astral-sh/uv](https://github.com/astral-sh/uv) (e.g., 3.8 through 3.14+). New minor versions are supported automatically as soon as they are released upstream.
 
-> Only the **latest stable patch** of each minor version is included.
-> Freethreaded builds are available from Python 3.13+.
+By default, the following environments are packaged:
+
+- **Operating Systems**: Linux, Windows
+- **Architecture**: `x86_64`
+- **Linux libc**: `gnu`, `musl`
+- **Variants**: Standard builds, and `freethreaded` (for Python 3.13+)
+
+_(Need a different OS like macOS or architecture like `aarch64`? See the [Customization](#customization) section below.)_
 
 ## Quick Start
 

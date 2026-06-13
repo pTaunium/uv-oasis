@@ -1,5 +1,7 @@
 # uv-oasis 🏝️
 
+[![Build and Push Docker Image](https://github.com/ptaunium/uv-oasis/actions/workflows/build-and-push.yml/badge.svg)](https://github.com/ptaunium/uv-oasis/actions)
+
 Offline Python distribution mirror for [uv](https://docs.astral.sh/uv/) in **air-gapped environments**.
 
 Downloads selected [python-build-standalone](https://github.com/astral-sh/python-build-standalone) distributions, packages them into a Docker image with nginx, and serves them as a drop-in replacement for uv's default Python download source.
@@ -32,10 +34,20 @@ docker run -d -p 8080:8080 \
 
 ### Configure uv
 
+You can configure `uv` using an environment variable:
+
 ```bash
 export UV_PYTHON_DOWNLOADS_JSON_URL=http://localhost:8080/download-metadata.json
 uv python install 3.13
 ```
+
+Alternatively, you can pass the URL directly via the CLI flag:
+
+```bash
+uv python install 3.13 --python-downloads-json-url http://localhost:8080/download-metadata.json
+```
+
+> **Note:** The downloaded tarballs are automatically routed to the same server via the generated JSON index, so you **do not need** to set `UV_PYTHON_INSTALL_MIRROR`.
 
 ## Air-Gapped Deployment
 
@@ -56,6 +68,9 @@ docker run -d -p 8080:8080 \
 # 4. Configure uv on developer machines:
 export UV_PYTHON_DOWNLOADS_JSON_URL=http://python-mirror.internal:8080/download-metadata.json
 uv python install 3.13
+
+# Or use the CLI flag directly:
+# uv python install 3.13 --python-downloads-json-url http://python-mirror.internal:8080/download-metadata.json
 ```
 
 ## Docker Compose

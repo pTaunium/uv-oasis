@@ -14,10 +14,11 @@ from __future__ import annotations
 import argparse
 import logging
 import sys
+import tomllib
 from pathlib import Path
 
 from uv_oasis.downloader import download_tarballs
-from uv_oasis.filter import filter_entries
+from uv_oasis.filter import PlatformSpec, filter_entries
 from uv_oasis.index_generator import write_json_index
 from uv_oasis.metadata import fetch_metadata
 
@@ -45,6 +46,12 @@ def main(argv: list[str] | None = None) -> int:
         help="Override the download-metadata.json URL",
     )
     parser.add_argument(
+        "--config",
+        type=Path,
+        default=Path("config.toml"),
+        help="Path to the TOML configuration file (default: config.toml)",
+    )
+    parser.add_argument(
         "--dry-run",
         action="store_true",
         help="Show what would be downloaded without downloading",
@@ -63,8 +70,52 @@ def main(argv: list[str] | None = None) -> int:
     metadata = fetch_metadata(**kwargs)
     logger.info("Fetched %d total entries from metadata", len(metadata))
 
-    # Step 2: Filter
-    entries = filter_entries(metadata)
+    # Load optional config
+    config_path: Path = args.config
+    if config_path.exists():
+        logger.info("Loading configuration from %s", config_path)
+        with config_path.open("rb") as f:
+            config = tomllib.load(f)
+
+        python_variants: set[str | None] = set()
+        for v in config.get("python_variants", ["default", "freethreaded"]):
+            python_variants.add(None if v == "default" else v)
+
+        cpu_variants: set[str | None] = set()
+        # if cpu_variants is omitted, we default to [None] via the loop or explicitly
+        for v in config.get("cpu_variants", []):
+            cpu_variants.add(None if v == "default" or v == "" else v)
+        if not cpu_variants:
+            cpu_variants.add(None)
+
+        platforms: list[PlatformSpec] | None = None
+        if "platforms" in config:
+            platforms = [
+                PlatformSpec(
+                    os=p["os"],
+                    arch_family=p.get("arch") or p.get("arch_family"),
+                    libc=p.get("libc"),
+                )
+                for p in config["platforms"]
+            ]
+
+        # Step 2: Filter with config
+        if platforms is not None:
+            entries = filter_entries(
+                metadata,
+                platforms=platforms,
+                python_variants=python_variants,
+                cpu_variants=cpu_variants,
+            )
+        else:
+            entries = filter_entries(
+                metadata,
+                python_variants=python_variants,
+                cpu_variants=cpu_variants,
+            )
+    else:
+        # Step 2: Filter without config (defaults)
+        entries = filter_entries(metadata)
     logger.info("Filtered to %d entries:", len(entries))
     for key in sorted(entries):
         entry = entries[key]

@@ -1,0 +1,40 @@
+# =====================================================================
+# uv-oasis Configuration File
+#
+# This file controls which Python builds are downloaded and packaged
+# into your Docker image. Edit this file to add support for other
+# architectures (e.g., macOS, linux-aarch64) or build variants.
+# =====================================================================
+
+# ---------------------------------------------------------------------
+# Variants
+# ---------------------------------------------------------------------
+# Python build variants to include.
+# - "default": The standard Python build.
+# - "freethreaded": The PEP 703 free-threaded (no-GIL) build (Python 3.13+).
+python_variants = ["default", "freethreaded"]
+
+# CPU micro-architecture variants to include.
+# Leave empty to only download generic builds that work on all CPUs.
+# Examples: "v2", "v3", "v4" for x86_64 optimizations.
+cpu_variants = []
+
+# ---------------------------------------------------------------------
+# Target Platforms
+# ---------------------------------------------------------------------
+# Define the operating systems and architectures you want to serve.
+
+[[platforms]]
+os = "linux"
+arch = "x86_64"
+libc = "gnu"
+
+[[platforms]]
+os = "linux"
+arch = "x86_64"
+libc = "musl"
+
+[[platforms]]
+os = "windows"
+arch = "x86_64"
+# libc is omitted for windows

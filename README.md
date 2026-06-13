@@ -178,6 +178,15 @@ spec:
 | ------------------------------ | ---------------------------------------------------------------------------- |
 | `UV_PYTHON_DOWNLOADS_JSON_URL` | Set to `http://<mirror-host>:8080/download-metadata.json` to use the mirror. |
 
+## Customization
+
+You can control exactly which Python versions, architectures, and variants are downloaded by editing the **[`config.toml`](config.toml)** file.
+
+- **`python_variants`**: Add `"freethreaded"` to download PEP 703 free-threaded builds, or keep `"default"` for standard builds.
+- **`platforms`**: Add or remove platforms (e.g., `os = "darwin"`, `arch = "aarch64"`) to support M-series Macs or ARM servers.
+
+When you modify this file and push to GitHub, the CI/CD pipeline will automatically build a new Docker image containing your selected Python distributions!
+
 ## Architecture
 
 ```
@@ -208,8 +217,8 @@ uv run python build.py --dry-run
 # Build (download tarballs + generate JSON)
 uv run python build.py --output ./dist
 
-# Build using a specific upstream metadata URL (optional)
-# uv run python build.py --output ./dist --metadata-url "https://raw.githubusercontent.com/astral-sh/uv/some-branch/crates/uv-python/download-metadata.json"
+# Build using a specific config file or metadata URL (optional)
+# uv run python build.py --output ./dist --config custom.toml --metadata-url "https://raw.githubusercontent.com/astral-sh/uv/some-branch/crates/uv-python/download-metadata.json"
 
 # Build Docker image
 docker build -f docker/Dockerfile -t uv-oasis:latest .

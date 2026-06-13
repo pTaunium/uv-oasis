@@ -117,7 +117,7 @@ def main(argv: list[str] | None = None) -> int:
         # Step 2: Filter without config (defaults)
         entries = filter_entries(metadata)
     logger.info("Filtered to %d entries:", len(entries))
-    for key in sorted(entries):
+    for key in entries:
         entry = entries[key]
         size_info = ""
         variant = entry.get("variant") or "normal"

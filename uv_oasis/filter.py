@@ -97,4 +97,11 @@ def filter_entries(
         ) > _extract_version_tuple(existing_entry[1]):
             latest_patch_entries_by_group[group_key] = (key, entry)
 
-    return dict(latest_patch_entries_by_group.values())
+    # Step 3: Sort results by version (descending) then key (ascending)
+    def _sort_key(item: tuple[tuple, tuple[str, dict]]) -> tuple:
+        key, entry = item[1]
+        v = _extract_version_tuple(entry)
+        return (-v[0], -v[1], -v[2], key)
+
+    sorted_group_items = sorted(latest_patch_entries_by_group.items(), key=_sort_key)
+    return {k: v for _, (k, v) in sorted_group_items}

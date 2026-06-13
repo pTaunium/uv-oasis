@@ -34,7 +34,7 @@ def generate_json_index(
     prerelease, sha256, variant, build) are preserved as-is.
     """
     index: dict[str, dict] = {}
-    for key, entry in sorted(entries.items()):
+    for key, entry in entries.items():
         filename = _extract_local_filename(entry)
         new_entry = {
             "name": entry["name"],

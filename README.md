@@ -2,7 +2,7 @@
 
 [![Build and Push Docker Image](https://github.com/ptaunium/uv-oasis/actions/workflows/build-and-push.yml/badge.svg)](https://github.com/ptaunium/uv-oasis/actions)
 
-Offline Python distribution mirror for [uv](https://docs.astral.sh/uv/) in **air-gapped environments**.
+**Drop-in offline mirror for [uv](https://docs.astral.sh/uv/)**. Serve Python binaries seamlessly in air-gapped and restricted network environments.
 
 Downloads selected [python-build-standalone](https://github.com/astral-sh/python-build-standalone) distributions, packages them into a Docker image with nginx, and serves them as a drop-in replacement for uv's default Python download source.
 

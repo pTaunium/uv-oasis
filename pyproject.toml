@@ -1,7 +1,7 @@
 [project]
 name = "uv-oasis"
 version = "0.1.0"
-description = "Offline Python mirror for uv in air-gapped environments"
+description = "Drop-in offline Python mirror for uv. Serve python-build-standalone binaries seamlessly in air-gapped networks."
 readme = "README.md"
 license = "MIT"
 authors = [

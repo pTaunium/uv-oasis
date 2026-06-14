@@ -28,24 +28,36 @@ RUN uv run python build.py --output /app/dist
 # Stage 2: Runtime
 # - Pure nginx static file server, no Python/uv needed
 # ============================================================
-FROM nginx:alpine
+FROM nginxinc/nginx-unprivileged:alpine-slim
+
+# Switch to root to perform OS upgrades and set permissions
+USER root
+RUN apk upgrade --no-cache
 
 LABEL org.opencontainers.image.title="uv-oasis"
 LABEL org.opencontainers.image.description="Offline Python mirror for uv in air-gapped environments"
 LABEL org.opencontainers.image.licenses="MIT"
 LABEL org.opencontainers.image.source="https://github.com/pTaunium/uv-oasis"
 
-COPY docker/nginx.conf /etc/nginx/templates/default.conf.template
-COPY docker/entrypoint.sh /entrypoint.sh
+# nginx-unprivileged expects templates in /etc/nginx/templates
+COPY --chown=nginx:nginx docker/nginx.conf /etc/nginx/templates/default.conf.template
+COPY --chown=nginx:nginx docker/entrypoint.sh /entrypoint.sh
 RUN chmod +x /entrypoint.sh
 
+# We must ensure nginx user has write access to the html directory
+# because entrypoint.sh generates download-metadata.json at runtime
+RUN chown -R nginx:nginx /usr/share/nginx/html
+
 # Copy documentation and licenses
-COPY LICENSE /usr/share/nginx/html/LICENSE
-COPY README.md /usr/share/nginx/html/README.md
+COPY --chown=nginx:nginx LICENSE /usr/share/nginx/html/LICENSE
+COPY --chown=nginx:nginx README.md /usr/share/nginx/html/README.md
 
 # Copy build artifacts from builder
-COPY --from=builder /app/dist/assets /usr/share/nginx/html/assets
-COPY --from=builder /app/dist/download-metadata.json.template /usr/share/nginx/html/
+COPY --chown=nginx:nginx --from=builder /app/dist/assets /usr/share/nginx/html/assets
+COPY --chown=nginx:nginx --from=builder /app/dist/download-metadata.json.template /usr/share/nginx/html/
+
+# Switch back to the unprivileged user before running
+USER nginx
 
 EXPOSE 8080
 

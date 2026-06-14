@@ -6,7 +6,7 @@ import json
 import logging
 from pathlib import Path
 
-from .models import MetadataEntry, MetadataIndex
+from .models import MetadataIndex
 from .utils import url_to_filename
 
 logger = logging.getLogger(__name__)
@@ -26,25 +26,17 @@ def generate_json_index(
     ``{base_url_placeholder}/pythons/{filename}``.
 
     The rest of the fields (name, arch, os, libc, major, minor, patch,
-    prerelease, sha256, variant, build) are preserved as-is.
+    prerelease, sha256, variant, etc.) are preserved as-is.
     """
     index: MetadataIndex = {}
     for key, entry in entries.items():
         filename = url_to_filename(entry["url"])
-        new_entry: MetadataEntry = {
-            "name": entry["name"],
-            "arch": entry["arch"],
-            "os": entry["os"],
-            "libc": entry.get("libc"),
-            "major": entry["major"],
-            "minor": entry["minor"],
-            "patch": entry["patch"],
-            "prerelease": entry.get("prerelease", ""),
-            "url": f"{base_url_placeholder}/assets/{filename}",
-            "sha256": entry.get("sha256"),
-            "variant": entry.get("variant"),
-            "build": entry.get("build"),
-        }
+
+        # Make a shallow copy to preserve any future fields that Astral might add.
+        # We only mutate the url field to point to our local mirror.
+        new_entry = entry.copy()
+        new_entry["url"] = f"{base_url_placeholder}/assets/{filename}"
+
         index[key] = new_entry
     return index
 

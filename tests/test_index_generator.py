@@ -19,7 +19,6 @@ def test_generate_json_index():
             "url": "http://example.com/cpython-3.12.1%2Bbuild-linux.tar.gz",
             "sha256": "fake_sha",
             "variant": None,
-            "build": "build",
         }
     }
 
@@ -52,7 +51,6 @@ def test_write_json_index(tmp_path: Path):
             "url": "http://example.com/cpython.tar.gz",
             "sha256": "sha",
             "variant": None,
-            "build": None,
         }
     }
 

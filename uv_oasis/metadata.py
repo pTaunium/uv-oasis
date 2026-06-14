@@ -21,7 +21,7 @@ def fetch_metadata(
     Keys are distribution identifiers like
     ``"cpython-3.13.3-linux-x86_64-gnu"`` and values are dicts with
     fields: name, arch, os, libc, major, minor, patch, prerelease,
-    url, sha256, variant, build.
+    url, sha256, variant.
     """
     response = httpx.get(url, timeout=timeout, follow_redirects=True)
     response.raise_for_status()

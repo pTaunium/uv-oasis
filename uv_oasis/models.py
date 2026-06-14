@@ -21,9 +21,8 @@ class MetadataEntry(TypedDict):
     patch: int
     prerelease: str
     url: str
-    sha256: str
+    sha256: str | None
     variant: str | None
-    build: str | None
 
 
 type MetadataIndex = dict[str, MetadataEntry]

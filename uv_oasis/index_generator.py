@@ -6,25 +6,20 @@ import json
 import logging
 from pathlib import Path
 
+from .models import MetadataIndex
+from .utils import url_to_filename
+
 logger = logging.getLogger(__name__)
 
 # Placeholder that entrypoint.sh will replace at container startup.
 BASE_URL_PLACEHOLDER = "{{BASE_URL}}"
 
 
-def _extract_local_filename(entry: dict) -> str:
-    """Derive the local filename from the original download URL."""
-    url: str = entry["url"]
-    filename = url.rsplit("/", 1)[-1]
-    # URL-decode %2B -> +
-    return filename.replace("%2B", "+")
-
-
 def generate_json_index(
-    entries: dict[str, dict],
+    entries: MetadataIndex,
     *,
     base_url_placeholder: str = BASE_URL_PLACEHOLDER,
-) -> dict[str, dict]:
+) -> MetadataIndex:
     """Build the JSON index dict with rewritten URLs.
 
     Each entry's ``url`` is rewritten from the upstream GitHub URL to
@@ -33,9 +28,9 @@ def generate_json_index(
     The rest of the fields (name, arch, os, libc, major, minor, patch,
     prerelease, sha256, variant, build) are preserved as-is.
     """
-    index: dict[str, dict] = {}
+    index: MetadataIndex = {}
     for key, entry in entries.items():
-        filename = _extract_local_filename(entry)
+        filename = url_to_filename(entry["url"])
         new_entry = {
             "name": entry["name"],
             "arch": entry["arch"],
@@ -55,7 +50,7 @@ def generate_json_index(
 
 
 def write_json_index(
-    entries: dict[str, dict],
+    entries: MetadataIndex,
     output_path: Path,
     *,
     base_url_placeholder: str = BASE_URL_PLACEHOLDER,

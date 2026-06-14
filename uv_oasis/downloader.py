@@ -2,11 +2,13 @@
 
 from __future__ import annotations
 
-import hashlib
 import logging
 from pathlib import Path
 
 import httpx
+
+from .models import MetadataIndex
+from .utils import calculate_sha256, url_to_filename
 
 logger = logging.getLogger(__name__)
 
@@ -18,21 +20,12 @@ class ChecksumMismatchError(Exception):
     """Raised when a downloaded file's SHA256 doesn't match the expected value."""
 
 
-def _calculate_sha256(path: Path) -> str:
-    """Compute the SHA256 hex digest of a file."""
-    h = hashlib.sha256()
-    with path.open("rb") as f:
-        while chunk := f.read(_CHUNK_SIZE):
-            h.update(chunk)
-    return h.hexdigest()
-
-
 def download_tarball(
+    client: httpx.Client,
     url: str,
     dest: Path,
     *,
     expected_sha256: str | None = None,
-    timeout: float = 300.0,
 ) -> Path:
     """Download a single file from *url* to *dest*.
 
@@ -46,13 +39,13 @@ def download_tarball(
 
     # Skip if already downloaded and checksum matches
     if dest.exists() and expected_sha256:
-        actual = _calculate_sha256(dest)
+        actual = calculate_sha256(dest)
         if actual == expected_sha256:
             logger.info("Skipping %s (already downloaded, checksum OK)", dest.name)
             return dest
 
     logger.info("Downloading %s", url)
-    with httpx.stream("GET", url, timeout=timeout, follow_redirects=True) as response:
+    with client.stream("GET", url) as response:
         response.raise_for_status()
         total_bytes = int(response.headers.get("content-length", 0))
         downloaded_bytes = 0
@@ -66,7 +59,7 @@ def download_tarball(
 
     # Verify checksum
     if expected_sha256:
-        actual = _calculate_sha256(dest)
+        actual = calculate_sha256(dest)
         if actual != expected_sha256:
             dest.unlink()
             raise ChecksumMismatchError(
@@ -79,7 +72,7 @@ def download_tarball(
 
 
 def download_tarballs(
-    entries: dict[str, dict],
+    entries: MetadataIndex,
     output_dir: Path,
     *,
     timeout: float = 300.0,
@@ -90,21 +83,20 @@ def download_tarballs(
     """
     results: dict[str, Path] = {}
     total_entries = len(entries)
-    for i, (key, entry) in enumerate(entries.items(), 1):
-        url = entry["url"]
-        # Extract the filename from the URL
-        filename = url.rsplit("/", 1)[-1]
-        # URL-decode %2B -> +
-        filename = filename.replace("%2B", "+")
-        dest = output_dir / filename
 
-        logger.info("[%d/%d] %s", i, total_entries, key)
-        download_tarball(
-            url,
-            dest,
-            expected_sha256=entry.get("sha256"),
-            timeout=timeout,
-        )
-        results[key] = dest
+    with httpx.Client(timeout=timeout, follow_redirects=True) as client:
+        for i, (key, entry) in enumerate(entries.items(), 1):
+            url = entry["url"]
+            filename = url_to_filename(url)
+            dest = output_dir / filename
+
+            logger.info("[%d/%d] %s", i, total_entries, key)
+            download_tarball(
+                client,
+                url,
+                dest,
+                expected_sha256=entry.get("sha256"),
+            )
+            results[key] = dest
 
     return results

@@ -3,8 +3,9 @@
 from __future__ import annotations
 
 from collections.abc import Sequence
+from typing import NamedTuple
 
-from .models import PlatformSpec
+from .models import MetadataEntry, MetadataIndex, PlatformSpec
 
 # Defaults if no config is provided
 DEFAULT_PLATFORMS: list[PlatformSpec] = [
@@ -16,23 +17,34 @@ DEFAULT_PYTHON_VARIANTS: set[str | None] = {None, "freethreaded"}
 DEFAULT_CPU_VARIANTS: set[str | None] = {None}
 
 
-def _is_stable(entry: dict) -> bool:
+def _is_stable(entry: MetadataEntry) -> bool:
     """Return True if the entry is a stable release (no prerelease tag)."""
     return entry.get("prerelease", "") == ""
 
 
-def _extract_version_tuple(entry: dict) -> tuple[int, int, int]:
+def _extract_version_tuple(entry: MetadataEntry) -> tuple[int, int, int]:
     """Extract (major, minor, patch) from an entry."""
     return (entry["major"], entry["minor"], entry["patch"])
 
 
+class ReleaseGroup(NamedTuple):
+    """Identifies a unique grouping of Python releases for filtering."""
+
+    minor: int
+    variant: str | None
+    os: str
+    arch_family: str
+    arch_variant: str | None
+    libc: str | None
+
+
 def filter_entries(
-    metadata: dict[str, dict],
+    metadata: MetadataIndex,
     *,
     platforms: Sequence[PlatformSpec] = DEFAULT_PLATFORMS,
     python_variants: set[str | None] = DEFAULT_PYTHON_VARIANTS,
     cpu_variants: set[str | None] = DEFAULT_CPU_VARIANTS,
-) -> dict[str, dict]:
+) -> MetadataIndex:
     """Filter the full metadata down to the entries we want to ship.
 
     Rules:
@@ -44,7 +56,7 @@ def filter_entries(
       keep only the highest patch version
     """
     # Step 1: Basic filtering
-    candidate_entries: list[tuple[str, dict]] = []
+    candidate_entries: list[tuple[str, MetadataEntry]] = []
     for key, entry in metadata.items():
         # Only cpython
         if entry.get("name") != "cpython":
@@ -61,16 +73,15 @@ def filter_entries(
         candidate_entries.append((key, entry))
 
     # Step 2: For each group, keep only the latest patch
-    # Group key: (minor, variant, os, arch_family, arch_variant, libc)
-    latest_patch_entries_by_group: dict[tuple, tuple[str, dict]] = {}
+    latest_patch_entries_by_group: dict[ReleaseGroup, tuple[str, MetadataEntry]] = {}
     for key, entry in candidate_entries:
-        group_key = (
-            entry["minor"],
-            entry.get("variant"),
-            entry["os"],
-            entry["arch"]["family"],
-            entry["arch"].get("variant"),
-            entry.get("libc"),
+        group_key = ReleaseGroup(
+            minor=entry["minor"],
+            variant=entry.get("variant"),
+            os=entry["os"],
+            arch_family=entry["arch"]["family"],
+            arch_variant=entry["arch"].get("variant"),
+            libc=entry.get("libc"),
         )
         existing_entry = latest_patch_entries_by_group.get(group_key)
         if existing_entry is None or _extract_version_tuple(
@@ -79,7 +90,7 @@ def filter_entries(
             latest_patch_entries_by_group[group_key] = (key, entry)
 
     # Step 3: Sort results by version (descending) then key (ascending)
-    def _sort_key(item: tuple[tuple, tuple[str, dict]]) -> tuple:
+    def _sort_key(item: tuple[ReleaseGroup, tuple[str, MetadataEntry]]) -> tuple:
         key, entry = item[1]
         v = _extract_version_tuple(entry)
         return (-v[0], -v[1], -v[2], key)

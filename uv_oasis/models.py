@@ -3,6 +3,11 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+from typing import Any
+
+# Type aliases for uv-oasis metadata
+MetadataEntry = dict[str, Any]
+MetadataIndex = dict[str, MetadataEntry]
 
 
 @dataclass(frozen=True)

@@ -4,6 +4,8 @@ from __future__ import annotations
 
 import httpx
 
+from .models import MetadataIndex
+
 # The canonical source for uv's Python download metadata.
 DOWNLOAD_METADATA_URL = (
     "https://raw.githubusercontent.com/astral-sh/uv/main/"
@@ -13,7 +15,7 @@ DOWNLOAD_METADATA_URL = (
 
 def fetch_metadata(
     *, url: str = DOWNLOAD_METADATA_URL, timeout: float = 30.0
-) -> dict[str, dict]:
+) -> MetadataIndex:
     """Download and return the full download-metadata.json as a dict.
 
     Keys are distribution identifiers like

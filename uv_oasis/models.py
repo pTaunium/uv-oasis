@@ -14,7 +14,7 @@ class ArchEntry(TypedDict):
 class MetadataEntry(TypedDict, total=False):
     name: Literal["cpython", "pypy"]
     arch: ArchEntry
-    os: Literal["linux", "windows", "macos"]
+    os: Literal["linux", "windows", "darwin"]
     libc: str | None
     major: int
     minor: int

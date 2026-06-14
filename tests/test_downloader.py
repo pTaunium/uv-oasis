@@ -1,5 +1,4 @@
 from pathlib import Path
-from typing import cast
 from unittest.mock import MagicMock, Mock, patch
 
 import httpx
@@ -70,19 +69,16 @@ def test_download_tarball_checksum_mismatch(mock_calc: MagicMock, tmp_path: Path
 @patch("uv_oasis.downloader.download_tarball")
 def test_download_tarballs(mock_download: MagicMock, tmp_path: Path):
 
-    entries = cast(
-        MetadataIndex,
-        {
-            "cpython-1": {
-                "url": "http://example.com/cpython-1.tar.gz",
-                "sha256": "sha1",
-            },
-            "cpython-2": {
-                "url": "http://example.com/cpython-2%2Bbuild.tar.gz",
-                "sha256": "sha2",
-            },
+    entries: MetadataIndex = {
+        "cpython-1": {
+            "url": "http://example.com/cpython-1.tar.gz",
+            "sha256": "sha1",
         },
-    )
+        "cpython-2": {
+            "url": "http://example.com/cpython-2%2Bbuild.tar.gz",
+            "sha256": "sha2",
+        },
+    }
 
     results = download_tarballs(entries, tmp_path)
 

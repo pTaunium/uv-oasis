@@ -1,5 +1,3 @@
-from typing import cast
-
 from uv_oasis.filter import (
     ReleaseGroup,
     _extract_version_tuple,
@@ -12,60 +10,49 @@ from uv_oasis.models import FilterConfig, MetadataEntry, MetadataIndex, Platform
 
 
 def test_is_stable():
-    assert _is_stable(cast(MetadataEntry, {"prerelease": ""})) is True
-    assert _is_stable(cast(MetadataEntry, {"prerelease": "b1"})) is False
-    assert (
-        _is_stable(cast(MetadataEntry, {})) is True
-    )  # missing prerelease defaults to ""
+    assert _is_stable({"prerelease": ""}) is True
+    assert _is_stable({"prerelease": "b1"}) is False
+    assert _is_stable({}) is True  # missing prerelease defaults to ""
 
 
 def test_extract_version_tuple():
-    assert _extract_version_tuple(
-        cast(MetadataEntry, {"major": 3, "minor": 12, "patch": 1})
-    ) == (
-        3,
-        12,
-        1,
-    )
+    assert _extract_version_tuple({"major": 3, "minor": 12, "patch": 1}) == (3, 12, 1)
 
 
 def test_get_candidate_entries():
-    metadata = cast(
-        MetadataIndex,
-        {
-            "cpython-3.12.1-linux-gnu": {
-                "name": "cpython",
-                "major": 3,
-                "minor": 12,
-                "patch": 1,
-                "prerelease": "",
-                "variant": None,
-                "os": "linux",
-                "arch": {"family": "x86_64", "variant": None},
-                "libc": "gnu",
-            },
-            "pypy-3.12": {
-                "name": "pypy",  # Should be ignored (not cpython)
-            },
-            "cpython-3.13.0b1": {
-                "name": "cpython",
-                "prerelease": "b1",  # Should be ignored (not stable)
-            },
-            "cpython-3.12.1-freethreaded": {
-                "name": "cpython",
-                "prerelease": "",
-                "variant": "freethreaded",  # Should be ignored (not in python_variants config below)
-            },
-            "cpython-3.12.1-mac": {
-                "name": "cpython",
-                "prerelease": "",
-                "variant": None,
-                "os": "darwin",  # Should be ignored (not in platforms)
-                "arch": {"family": "aarch64", "variant": None},
-                "libc": "none",
-            },
+    metadata: MetadataIndex = {
+        "cpython-3.12.1-linux-gnu": {
+            "name": "cpython",
+            "major": 3,
+            "minor": 12,
+            "patch": 1,
+            "prerelease": "",
+            "variant": None,
+            "os": "linux",
+            "arch": {"family": "x86_64", "variant": None},
+            "libc": "gnu",
         },
-    )
+        "pypy-3.12": {
+            "name": "pypy",  # Should be ignored (not cpython)
+        },
+        "cpython-3.13.0b1": {
+            "name": "cpython",
+            "prerelease": "b1",  # Should be ignored (not stable)
+        },
+        "cpython-3.12.1-freethreaded": {
+            "name": "cpython",
+            "prerelease": "",
+            "variant": "freethreaded",  # Should be ignored (not in python_variants config below)
+        },
+        "cpython-3.12.1-mac": {
+            "name": "cpython",
+            "prerelease": "",
+            "variant": None,
+            "os": "darwin",  # Should be ignored (not in platforms)
+            "arch": {"family": "aarch64", "variant": None},
+            "libc": "none",
+        },
+    }
 
     platforms = [PlatformSpec("linux", "x86_64", "gnu")]
     candidates = _get_candidate_entries(
@@ -77,47 +64,44 @@ def test_get_candidate_entries():
 
 
 def test_keep_latest_patch():
-    candidates = cast(
-        list[tuple[str, MetadataEntry]],
-        [
-            (
-                "cpython-3.12.0-linux-gnu",
-                {
-                    "minor": 12,
-                    "patch": 0,
-                    "variant": None,
-                    "os": "linux",
-                    "arch": {"family": "x86_64", "variant": None},
-                    "libc": "gnu",
-                    "major": 3,
-                },
-            ),
-            (
-                "cpython-3.12.1-linux-gnu",
-                {
-                    "minor": 12,
-                    "patch": 1,
-                    "variant": None,
-                    "os": "linux",
-                    "arch": {"family": "x86_64", "variant": None},
-                    "libc": "gnu",
-                    "major": 3,
-                },
-            ),
-            (
-                "cpython-3.11.5-linux-gnu",
-                {
-                    "minor": 11,
-                    "patch": 5,
-                    "variant": None,
-                    "os": "linux",
-                    "arch": {"family": "x86_64", "variant": None},
-                    "libc": "gnu",
-                    "major": 3,
-                },
-            ),
-        ],
-    )
+    candidates: list[tuple[str, MetadataEntry]] = [
+        (
+            "cpython-3.12.0-linux-gnu",
+            {
+                "minor": 12,
+                "patch": 0,
+                "variant": None,
+                "os": "linux",
+                "arch": {"family": "x86_64", "variant": None},
+                "libc": "gnu",
+                "major": 3,
+            },
+        ),
+        (
+            "cpython-3.12.1-linux-gnu",
+            {
+                "minor": 12,
+                "patch": 1,
+                "variant": None,
+                "os": "linux",
+                "arch": {"family": "x86_64", "variant": None},
+                "libc": "gnu",
+                "major": 3,
+            },
+        ),
+        (
+            "cpython-3.11.5-linux-gnu",
+            {
+                "minor": 11,
+                "patch": 5,
+                "variant": None,
+                "os": "linux",
+                "arch": {"family": "x86_64", "variant": None},
+                "libc": "gnu",
+                "major": 3,
+            },
+        ),
+    ]
 
     result = _keep_latest_patch(candidates)
 
@@ -133,33 +117,30 @@ def test_keep_latest_patch():
 
 
 def test_filter_entries_sorting():
-    metadata = cast(
-        MetadataIndex,
-        {
-            "cpython-3.10.0": {
-                "name": "cpython",
-                "major": 3,
-                "minor": 10,
-                "patch": 0,
-                "prerelease": "",
-                "variant": None,
-                "os": "linux",
-                "arch": {"family": "x86_64", "variant": None},
-                "libc": "gnu",
-            },
-            "cpython-3.12.0": {
-                "name": "cpython",
-                "major": 3,
-                "minor": 12,
-                "patch": 0,
-                "prerelease": "",
-                "variant": None,
-                "os": "linux",
-                "arch": {"family": "x86_64", "variant": None},
-                "libc": "gnu",
-            },
+    metadata: MetadataIndex = {
+        "cpython-3.10.0": {
+            "name": "cpython",
+            "major": 3,
+            "minor": 10,
+            "patch": 0,
+            "prerelease": "",
+            "variant": None,
+            "os": "linux",
+            "arch": {"family": "x86_64", "variant": None},
+            "libc": "gnu",
         },
-    )
+        "cpython-3.12.0": {
+            "name": "cpython",
+            "major": 3,
+            "minor": 12,
+            "patch": 0,
+            "prerelease": "",
+            "variant": None,
+            "os": "linux",
+            "arch": {"family": "x86_64", "variant": None},
+            "libc": "gnu",
+        },
+    }
 
     config = FilterConfig(
         python_variants={None},

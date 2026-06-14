@@ -71,7 +71,9 @@ def _keep_latest_patch(
     return latest_patch_entries_by_group
 
 
-def _sort_key(item: tuple[ReleaseGroup, tuple[str, MetadataEntry]]) -> tuple:
+def _sort_key(
+    item: tuple[ReleaseGroup, tuple[str, MetadataEntry]],
+) -> tuple[int, int, int, str]:
     dist_id, entry = item[1]
     v = (entry["major"], entry["minor"], entry["patch"])
     return (-v[0], -v[1], -v[2], dist_id)

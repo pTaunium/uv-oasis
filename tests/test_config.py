@@ -1,12 +1,15 @@
 from pathlib import Path
 
-from uv_oasis.config import load_filter_config
+from uv_oasis.config import DEFAULT_PLATFORMS, load_filter_config
 from uv_oasis.models import PlatformSpec
 
 
 def test_load_filter_config_missing_file():
-    # File doesn't exist
-    assert load_filter_config(Path("nonexistent.toml")) is None
+    # File doesn't exist, should return default config
+    config = load_filter_config(Path("nonexistent.toml"))
+    assert config.python_variants == {None, "freethreaded"}
+    assert config.cpu_variants == {None}
+    assert config.platforms == DEFAULT_PLATFORMS
 
 
 def test_load_filter_config_empty(tmp_path: Path):
@@ -16,7 +19,7 @@ def test_load_filter_config_empty(tmp_path: Path):
     assert config is not None
     assert config.python_variants == {None, "freethreaded"}
     assert config.cpu_variants == {None}
-    assert config.platforms is None
+    assert config.platforms == DEFAULT_PLATFORMS
 
 
 def test_load_filter_config_full(tmp_path: Path):
@@ -42,7 +45,6 @@ def test_load_filter_config_full(tmp_path: Path):
     assert config is not None
     assert config.python_variants == {None, "freethreaded"}
     assert config.cpu_variants == {None, "x86_64-v3"}
-    assert config.platforms is not None
     assert len(config.platforms) == 2
 
     assert config.platforms[0] == PlatformSpec(
@@ -65,4 +67,4 @@ def test_load_filter_config_no_platforms(tmp_path: Path):
     assert config is not None
     assert config.python_variants == {None}
     assert config.cpu_variants == {None}
-    assert config.platforms is None
+    assert config.platforms == DEFAULT_PLATFORMS

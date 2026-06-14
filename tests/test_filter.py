@@ -167,6 +167,6 @@ def test_filter_entries_sorting():
         platforms=[PlatformSpec("linux", "x86_64", "gnu")],
     )
 
-    result = filter_entries(metadata, config=config)
+    result = filter_entries(metadata, config)
     keys = list(result.keys())
     assert keys == ["cpython-3.12.0", "cpython-3.10.0"]  # Descending

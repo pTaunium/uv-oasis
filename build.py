@@ -72,7 +72,7 @@ def main(argv: list[str] | None = None) -> int:
 
     # Step 2: Filter
     filter_config = load_filter_config(args.config)
-    entries = filter_entries(metadata, config=filter_config)
+    entries = filter_entries(metadata, filter_config)
     logger.info("Filtered to %d entries:", len(entries))
     for dist_id in entries:
         entry = entries[dist_id]

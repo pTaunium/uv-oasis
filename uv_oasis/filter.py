@@ -6,15 +6,6 @@ from typing import NamedTuple
 
 from .models import FilterConfig, MetadataEntry, MetadataIndex, PlatformSpec
 
-# Defaults if no config is provided
-DEFAULT_PLATFORMS: list[PlatformSpec] = [
-    PlatformSpec(os="linux", arch_family="x86_64", libc="gnu"),
-    PlatformSpec(os="linux", arch_family="x86_64", libc="musl"),
-    PlatformSpec(os="windows", arch_family="x86_64"),
-]
-DEFAULT_PYTHON_VARIANTS: set[str | None] = {None, "freethreaded"}
-DEFAULT_CPU_VARIANTS: set[str | None] = {None}
-
 
 class ReleaseGroup(NamedTuple):
     """Identifies a unique grouping of Python releases for filtering."""
@@ -88,34 +79,24 @@ def _sort_key(item: tuple[ReleaseGroup, tuple[str, MetadataEntry]]) -> tuple:
 
 def filter_entries(
     metadata: MetadataIndex,
-    *,
-    config: FilterConfig | None = None,
+    config: FilterConfig,
 ) -> MetadataIndex:
     """Filter the full metadata down to the entries we want to ship.
 
-    Uses the provided FilterConfig (or defaults) to:
+    Uses the provided FilterConfig to:
     - Keep only cpython and stable releases
     - Filter by specified platforms, CPU variants, and Python variants
     - Keep only the highest patch version for each ReleaseGroup
     - Return the entries sorted by version descending
     """
-    platforms = DEFAULT_PLATFORMS
-    python_variants = DEFAULT_PYTHON_VARIANTS
-    cpu_variants = DEFAULT_CPU_VARIANTS
-
-    if config is not None:
-        if config.platforms is not None:
-            platforms = config.platforms
-        python_variants = config.python_variants
-        cpu_variants = config.cpu_variants
     # Step 1: Basic filtering
     candidate_entries = _get_candidate_entries(
-        metadata, platforms, python_variants, cpu_variants
+        metadata, config.platforms, config.python_variants, config.cpu_variants
     )
 
     # Step 2: For each group, keep only the latest patch
     latest_patch_entries_by_group = _keep_latest_patch(candidate_entries)
 
-    # Step 3: Sort results by version (descending) then key (ascending)
+    # Step 3: Sort results by version (descending) then dist_id (ascending)
     sorted_group_items = sorted(latest_patch_entries_by_group.items(), key=_sort_key)
     return {k: v for _, (k, v) in sorted_group_items}

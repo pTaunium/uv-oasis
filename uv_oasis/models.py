@@ -57,4 +57,4 @@ class FilterConfig:
 
     python_variants: set[str | None]
     cpu_variants: set[str | None]
-    platforms: list[PlatformSpec] | None
+    platforms: list[PlatformSpec]

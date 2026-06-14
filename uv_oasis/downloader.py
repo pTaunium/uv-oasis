@@ -6,6 +6,7 @@ import logging
 from pathlib import Path
 
 import httpx
+from tenacity import retry, stop_after_attempt, wait_exponential
 
 from .models import MetadataIndex
 from .utils import calculate_sha256, url_to_filename
@@ -20,6 +21,11 @@ class ChecksumMismatchError(Exception):
     """Raised when a downloaded file's SHA256 doesn't match the expected value."""
 
 
+@retry(
+    stop=stop_after_attempt(3),
+    wait=wait_exponential(multiplier=1, min=2, max=10),
+    reraise=True,
+)
 def download_tarball(
     client: httpx.Client,
     url: str,
@@ -39,8 +45,8 @@ def download_tarball(
 
     # Skip if already downloaded and checksum matches
     if dest.exists() and expected_sha256:
-        actual = calculate_sha256(dest)
-        if actual == expected_sha256:
+        actual_sha256 = calculate_sha256(dest)
+        if actual_sha256 == expected_sha256:
             logger.info("Skipping %s (already downloaded, checksum OK)", dest.name)
             return dest
 
@@ -59,12 +65,12 @@ def download_tarball(
 
     # Verify checksum
     if expected_sha256:
-        actual = calculate_sha256(dest)
-        if actual != expected_sha256:
+        actual_sha256 = calculate_sha256(dest)
+        if actual_sha256 != expected_sha256:
             dest.unlink()
             raise ChecksumMismatchError(
-                f"SHA256 mismatch for {dest.name}: "
-                f"expected {expected_sha256}, got {actual}"
+                f"Checksum mismatch for {dest}: "
+                f"expected {expected_sha256}, got {actual_sha256}"
             )
         logger.info("  ✓ SHA256 verified: %s", dest.name)
 
@@ -79,24 +85,33 @@ def download_tarballs(
 ) -> dict[str, Path]:
     """Download all tarballs for the given entries.
 
-    Returns a mapping from entry key to the local file path.
+    Returns a mapping from entry dist_id to the local file path.
     """
-    results: dict[str, Path] = {}
+    downloaded_paths: dict[str, Path] = {}
     total_entries = len(entries)
 
     with httpx.Client(timeout=timeout, follow_redirects=True) as client:
-        for i, (key, entry) in enumerate(entries.items(), 1):
+        for i, (dist_id, entry) in enumerate(entries.items(), 1):
             url = entry["url"]
             filename = url_to_filename(url)
             dest = output_dir / filename
+            expected_sha256 = entry.get("sha256")
 
-            logger.info("[%d/%d] %s", i, total_entries, key)
-            download_tarball(
-                client,
-                url,
-                dest,
-                expected_sha256=entry.get("sha256"),
-            )
-            results[key] = dest
+            logger.info("[%d/%d] %s", i, total_entries, dist_id)
+            try:
+                download_tarball(
+                    client,
+                    url,
+                    dest,
+                    expected_sha256=expected_sha256,
+                )
+            except httpx.HTTPError as e:
+                logger.error("Failed to download %s: %s", dist_id, e)
+                raise
+            except ChecksumMismatchError as e:
+                logger.error("Checksum error for %s: %s", dist_id, e)
+                raise
 
-    return results
+            downloaded_paths[dist_id] = dest
+
+    return downloaded_paths

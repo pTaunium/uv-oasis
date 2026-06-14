@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import httpx
+from tenacity import retry, stop_after_attempt, wait_exponential
 
 from .models import MetadataIndex
 
@@ -13,6 +14,11 @@ DOWNLOAD_METADATA_URL = (
 )
 
 
+@retry(
+    stop=stop_after_attempt(3),
+    wait=wait_exponential(multiplier=1, min=2, max=10),
+    reraise=True,
+)
 def fetch_metadata(
     *, url: str = DOWNLOAD_METADATA_URL, timeout: float = 30.0
 ) -> MetadataIndex:

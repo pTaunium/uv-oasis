@@ -45,7 +45,7 @@ def _get_candidate_entries(
 ) -> list[tuple[str, MetadataEntry]]:
     """Filter out entries that don't match the requested platforms and variants."""
     candidate_entries: list[tuple[str, MetadataEntry]] = []
-    for key, entry in metadata.items():
+    for dist_id, entry in metadata.items():
         if entry.get("name") != "cpython":
             continue
         if not _is_stable(entry):
@@ -54,7 +54,7 @@ def _get_candidate_entries(
             continue
         if not any(p.matches(entry, cpu_variants) for p in platforms):
             continue
-        candidate_entries.append((key, entry))
+        candidate_entries.append((dist_id, entry))
     return candidate_entries
 
 
@@ -63,7 +63,7 @@ def _keep_latest_patch(
 ) -> dict[ReleaseGroup, tuple[str, MetadataEntry]]:
     """For each release group, keep only the one with the highest patch version."""
     latest_patch_entries_by_group: dict[ReleaseGroup, tuple[str, MetadataEntry]] = {}
-    for key, entry in candidate_entries:
+    for dist_id, entry in candidate_entries:
         group_key = ReleaseGroup(
             minor=entry["minor"],
             variant=entry.get("variant"),
@@ -73,17 +73,17 @@ def _keep_latest_patch(
             libc=entry.get("libc"),
         )
         existing_entry = latest_patch_entries_by_group.get(group_key)
-        if existing_entry is None or _extract_version_tuple(
-            entry
-        ) > _extract_version_tuple(existing_entry[1]):
-            latest_patch_entries_by_group[group_key] = (key, entry)
+        if not existing_entry or _extract_version_tuple(entry) > _extract_version_tuple(
+            existing_entry[1]
+        ):
+            latest_patch_entries_by_group[group_key] = (dist_id, entry)
     return latest_patch_entries_by_group
 
 
 def _sort_key(item: tuple[ReleaseGroup, tuple[str, MetadataEntry]]) -> tuple:
-    key, entry = item[1]
-    v = _extract_version_tuple(entry)
-    return (-v[0], -v[1], -v[2], key)
+    dist_id, entry = item[1]
+    v = (entry["major"], entry["minor"], entry["patch"])
+    return (-v[0], -v[1], -v[2], dist_id)
 
 
 def filter_entries(

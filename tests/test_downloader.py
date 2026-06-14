@@ -56,6 +56,9 @@ def test_download_tarball_checksum_mismatch(mock_calc: MagicMock, tmp_path: Path
     dest = tmp_path / "test.tar.gz"
     mock_calc.return_value = "wrong_sha"
 
+    # Disable retry sleep for tests
+    download_tarball.retry.sleep = Mock()  # type: ignore
+
     respx.get("http://url").mock(return_value=httpx.Response(200, content=b"hello"))
 
     with httpx.Client() as client, pytest.raises(ChecksumMismatchError):

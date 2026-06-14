@@ -72,22 +72,7 @@ def main(argv: list[str] | None = None) -> int:
 
     # Step 2: Filter
     filter_config = load_filter_config(args.config)
-    if filter_config:
-        if filter_config.platforms is not None:
-            entries = filter_entries(
-                metadata,
-                platforms=filter_config.platforms,
-                python_variants=filter_config.python_variants,
-                cpu_variants=filter_config.cpu_variants,
-            )
-        else:
-            entries = filter_entries(
-                metadata,
-                python_variants=filter_config.python_variants,
-                cpu_variants=filter_config.cpu_variants,
-            )
-    else:
-        entries = filter_entries(metadata)
+    entries = filter_entries(metadata, config=filter_config)
     logger.info("Filtered to %d entries:", len(entries))
     for key in entries:
         entry = entries[key]

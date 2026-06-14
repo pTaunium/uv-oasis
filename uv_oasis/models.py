@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import TypedDict
+from typing import Literal, TypedDict
 
 
 class ArchEntry(TypedDict):
@@ -11,18 +11,18 @@ class ArchEntry(TypedDict):
     variant: str | None
 
 
-class MetadataEntry(TypedDict):
-    name: str
+class MetadataEntry(TypedDict, total=False):
+    name: Literal["cpython", "pypy"]
     arch: ArchEntry
-    os: str
-    libc: str
+    os: Literal["linux", "windows", "macos"]
+    libc: str | None
     major: int
     minor: int
     patch: int
     prerelease: str
     url: str
     sha256: str | None
-    variant: str | None
+    variant: Literal["freethreaded"] | None
 
 
 type MetadataIndex = dict[str, MetadataEntry]

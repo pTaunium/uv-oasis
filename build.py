@@ -74,11 +74,11 @@ def main(argv: list[str] | None = None) -> int:
     filter_config = load_filter_config(args.config)
     entries = filter_entries(metadata, config=filter_config)
     logger.info("Filtered to %d entries:", len(entries))
-    for key in entries:
-        entry = entries[key]
+    for dist_id in entries:
+        entry = entries[dist_id]
         size_info = ""
         variant = entry.get("variant") or "normal"
-        logger.info("  %s (variant=%s)%s", key, variant, size_info)
+        logger.info("  %s (variant=%s)%s", dist_id, variant, size_info)
 
     if args.dry_run:
         logger.info("Dry run — skipping downloads")

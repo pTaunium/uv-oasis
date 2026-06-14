@@ -3,11 +3,30 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import Any
+from typing import TypedDict
 
-# Type aliases for uv-oasis metadata
-MetadataEntry = dict[str, Any]
-MetadataIndex = dict[str, MetadataEntry]
+
+class ArchEntry(TypedDict):
+    family: str
+    variant: str | None
+
+
+class MetadataEntry(TypedDict):
+    name: str
+    arch: ArchEntry
+    os: str
+    libc: str
+    major: int
+    minor: int
+    patch: int
+    prerelease: str
+    url: str
+    sha256: str
+    variant: str | None
+    build: str | None
+
+
+type MetadataIndex = dict[str, MetadataEntry]
 
 
 @dataclass(frozen=True)
@@ -18,7 +37,11 @@ class PlatformSpec:
     arch_family: str
     libc: str | None = None  # None for Windows
 
-    def matches(self, entry: dict, allowed_cpu_variants: set[str | None]) -> bool:
+    def matches(
+        self,
+        entry: MetadataEntry,
+        allowed_cpu_variants: set[str | None],
+    ) -> bool:
         if entry.get("os") != self.os:
             return False
         arch = entry.get("arch", {})

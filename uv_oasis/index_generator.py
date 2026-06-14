@@ -6,7 +6,7 @@ import json
 import logging
 from pathlib import Path
 
-from .models import MetadataIndex
+from .models import MetadataEntry, MetadataIndex
 from .utils import url_to_filename
 
 logger = logging.getLogger(__name__)
@@ -31,7 +31,7 @@ def generate_json_index(
     index: MetadataIndex = {}
     for key, entry in entries.items():
         filename = url_to_filename(entry["url"])
-        new_entry = {
+        new_entry: MetadataEntry = {
             "name": entry["name"],
             "arch": entry["arch"],
             "os": entry["os"],

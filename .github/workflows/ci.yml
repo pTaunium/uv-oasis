@@ -62,7 +62,7 @@ jobs:
         run: uv run --package ${{ matrix.package }} pytest --cov --cov-branch --cov-report=xml packages/${{ matrix.package }}/tests/
 
       - name: Upload coverage reports to Codecov
-        uses: codecov/codecov-action@v5
+        uses: codecov/codecov-action@v7
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
           flags: ${{ matrix.package }}

@@ -10,6 +10,9 @@ jobs:
   lint:
     name: Lint & Type Check
     runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        package: [uv-oasis]
     steps:
       - name: Checkout repository
         uses: actions/checkout@v7
@@ -26,17 +29,20 @@ jobs:
         run: uv sync --locked
 
       - name: Check Format
-        run: uv run ruff format --check .
+        run: uv run ruff format --check packages/${{ matrix.package }}/
 
       - name: Lint
-        run: uv run ruff check .
+        run: uv run ruff check packages/${{ matrix.package }}/
 
       - name: Check Type
-        run: uv run ty check .
+        run: uv run ty check --project packages/${{ matrix.package }}
 
   test:
-    name: Run Tests
+    name: Test
     runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        package: [uv-oasis]
     steps:
       - name: Checkout repository
         uses: actions/checkout@v7
@@ -53,9 +59,10 @@ jobs:
         run: uv sync --locked
 
       - name: Run Pytest with Coverage
-        run: uv run pytest --cov --cov-branch --cov-report=xml tests/
+        run: uv run --package ${{ matrix.package }} pytest --cov --cov-branch --cov-report=xml packages/${{ matrix.package }}/tests/
 
       - name: Upload coverage reports to Codecov
         uses: codecov/codecov-action@v5
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
+          flags: ${{ matrix.package }}

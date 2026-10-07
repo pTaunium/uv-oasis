@@ -1,6 +1,7 @@
 # ============================================================
 # Stage 1: Builder
 # - Install deps, run build.py to download Python tarballs + generate JSON
+# Build context: workspace root (docker build -f packages/uv-oasis/docker/Dockerfile .)
 # ============================================================
 FROM --platform=$BUILDPLATFORM ghcr.io/astral-sh/uv:python3.14-alpine AS builder
 
@@ -12,14 +13,16 @@ ENV UV_NO_DEV=1
 WORKDIR /app
 
 # Intermediate layer: install dependencies first (Docker cache friendly)
+# Workspace root pyproject.toml + uv.lock + package pyproject.toml needed for uv sync
 RUN --mount=type=cache,target=/root/.cache/uv \
     --mount=type=bind,source=uv.lock,target=uv.lock \
     --mount=type=bind,source=pyproject.toml,target=pyproject.toml \
-    uv sync --locked --no-install-project
+    --mount=type=bind,source=packages/uv-oasis/pyproject.toml,target=packages/uv-oasis/pyproject.toml \
+    uv sync --locked --no-install-project --package uv-oasis
 
 # Copy only the necessary python source code
-COPY build.py /app/
-COPY uv_oasis /app/uv_oasis
+COPY packages/uv-oasis/build.py /app/
+COPY packages/uv-oasis/uv_oasis /app/uv_oasis
 
 # Run build script: download tarballs + generate JSON
 RUN uv run python build.py --output /app/dist
@@ -40,8 +43,8 @@ LABEL org.opencontainers.image.licenses="MIT"
 LABEL org.opencontainers.image.source="https://github.com/pTaunium/uv-oasis"
 
 # nginx-unprivileged expects templates in /etc/nginx/templates
-COPY --chown=nginx:nginx docker/nginx.conf /etc/nginx/templates/default.conf.template
-COPY --chown=nginx:nginx docker/entrypoint.sh /entrypoint.sh
+COPY --chown=nginx:nginx packages/uv-oasis/docker/nginx.conf /etc/nginx/templates/default.conf.template
+COPY --chown=nginx:nginx packages/uv-oasis/docker/entrypoint.sh /entrypoint.sh
 RUN chmod +x /entrypoint.sh
 
 # We must ensure nginx user has write access to the html directory
@@ -49,8 +52,8 @@ RUN chmod +x /entrypoint.sh
 RUN chown -R nginx:nginx /usr/share/nginx/html
 
 # Copy documentation and licenses
-COPY --chown=nginx:nginx LICENSE /usr/share/nginx/html/LICENSE
-COPY --chown=nginx:nginx README.md /usr/share/nginx/html/README.md
+COPY --chown=nginx:nginx packages/uv-oasis/LICENSE /usr/share/nginx/html/LICENSE
+COPY --chown=nginx:nginx packages/uv-oasis/README.md /usr/share/nginx/html/README.md
 
 # Copy build artifacts from builder
 COPY --chown=nginx:nginx --from=builder /app/dist/assets /usr/share/nginx/html/assets

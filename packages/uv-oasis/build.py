@@ -48,7 +48,7 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument(
         "--config",
         type=Path,
-        default=Path("config.toml"),
+        default=Path(__file__).resolve().parent / "config.toml",
         help="Path to the TOML configuration file (default: config.toml)",
     )
     parser.add_argument(

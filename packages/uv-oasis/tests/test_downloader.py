@@ -4,7 +4,6 @@ from unittest.mock import MagicMock, Mock, patch
 import httpx
 import pytest
 import respx
-
 from uv_oasis.downloader import (
     ChecksumMismatchError,
     download_tarball,
@@ -90,3 +89,31 @@ def test_download_tarballs(mock_download: MagicMock, tmp_path: Path):
     assert results["cpython-2"].name == "cpython-2+build.tar.gz"
 
     assert mock_download.call_count == 2
+
+
+@patch("uv_oasis.downloader.download_tarball")
+def test_download_tarballs_http_error(mock_download: MagicMock, tmp_path: Path):
+    mock_download.side_effect = httpx.ConnectError("Connection failed")
+    entries: MetadataIndex = {
+        "cpython-1": {
+            "url": "http://example.com/cpython-1.tar.gz",
+        }
+    }
+
+    with pytest.raises(httpx.HTTPError):
+        download_tarballs(entries, tmp_path)
+
+
+@patch("uv_oasis.downloader.download_tarball")
+def test_download_tarballs_checksum_mismatch_error(
+    mock_download: MagicMock, tmp_path: Path
+):
+    mock_download.side_effect = ChecksumMismatchError("Checksum error")
+    entries: MetadataIndex = {
+        "cpython-1": {
+            "url": "http://example.com/cpython-1.tar.gz",
+        }
+    }
+
+    with pytest.raises(ChecksumMismatchError):
+        download_tarballs(entries, tmp_path)

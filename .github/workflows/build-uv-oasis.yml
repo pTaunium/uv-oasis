@@ -39,9 +39,15 @@ jobs:
             RELEASE_TAG="${INPUT_TAG}"
           else
             RELEASE_TAG=$(curl -fsSL \
-              https://raw.githubusercontent.com/astral-sh/uv/main/crates/uv-python/download-metadata.json \
+              https://raw.githubusercontent.com/astral-sh/uv/main/crates/uv-python-managed/download-metadata.json \
               | jq -r '[.[] | select(.name == "cpython" and .build != null and (.build | test("^20[0-9]{6}$"))) | .build] | max')
           fi
+
+          if [ -z "${RELEASE_TAG}" ] || [ "${RELEASE_TAG}" = "null" ]; then
+            echo "::error::Failed to determine a valid release tag"
+            exit 1
+          fi
+
           echo "release_tag=${RELEASE_TAG}" >> "$GITHUB_OUTPUT"
           echo "Latest release tag: ${RELEASE_TAG}"
 

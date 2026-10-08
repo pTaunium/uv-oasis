@@ -216,7 +216,7 @@ uv run python build.py --dry-run
 uv run python build.py --output ./dist
 
 # Build using a specific config file or metadata URL (optional)
-# uv run python build.py --output ./dist --config custom.toml --metadata-url "https://raw.githubusercontent.com/astral-sh/uv/some-branch/crates/uv-python/download-metadata.json"
+# uv run python build.py --output ./dist --config custom.toml --metadata-url "https://raw.githubusercontent.com/astral-sh/uv/some-branch/crates/uv-python-managed/download-metadata.json"
 
 # Build Docker image
 docker build -f docker/Dockerfile -t uv-oasis:latest .

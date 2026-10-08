@@ -10,7 +10,7 @@ from .models import MetadataIndex
 # The canonical source for uv's Python download metadata.
 DOWNLOAD_METADATA_URL = (
     "https://raw.githubusercontent.com/astral-sh/uv/main/"
-    "crates/uv-python/download-metadata.json"
+    "crates/uv-python-managed/download-metadata.json"
 )
 
 
